@@ -1,4 +1,0 @@
-2018-09-18 16:32:16 | INFO | 12833 | Thread-1 | fraud_api | /Users/xiangxianzhang/Desktop/myWork/fraud_api/src/__init__.py:<module> | 22 | host 192.168.1.9:10120
-2018-09-18 16:32:16 | INFO | 12833 | Thread-1 | fraud_api | /Users/xiangxianzhang/Desktop/myWork/fraud_api/src/__init__.py:<module> | 23 | mongo_url None
-2018-09-18 16:32:17 | INFO | 12834 | Thread-1 | fraud_api | /Users/xiangxianzhang/Desktop/myWork/fraud_api/src/__init__.py:<module> | 22 | host 192.168.1.9:10120
-2018-09-18 16:32:17 | INFO | 12834 | Thread-1 | fraud_api | /Users/xiangxianzhang/Desktop/myWork/fraud_api/src/__init__.py:<module> | 23 | mongo_url None
