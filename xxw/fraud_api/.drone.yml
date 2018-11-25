@@ -1,0 +1,89 @@
+pipeline:
+  build-prod:
+    image: plugins/docker
+    registry: shjrccr.ccs.tencentyun.com
+    repo: shjrccr.ccs.tencentyun.com/loan-backend/fraud-api
+    username: 100005643178
+    password: ${DOCKER_PASSWORD}
+    dockerfile: Dockerfile
+    when:
+      event: tag
+      branch: refs/tags/prod-v*
+    tags:
+      - latest
+      - ${DRONE_TAG##v}
+    secrets: [ DOCKER_PASSWORD ]
+
+  build-test:
+    image: plugins/docker
+    registry: ccr.ccs.tencentyun.com
+    repo: ccr.ccs.tencentyun.com/loan-backend/fraud-api
+    username: 100005643178
+    password: ${DOCKER_PASSWORD}
+    dockerfile: Dockerfile
+    when:
+      event: tag
+      branch: refs/tags/test-v*
+    tags:
+      - latest
+      - ${DRONE_TAG##v}
+    secrets: [ DOCKER_PASSWORD ]
+
+  deploy-prod:
+    image: ccr.ccs.tencentyun.com/ops-public/plugin-drone-kubernetes:latest
+    kubernetes_token: ${KUBERNETES_TOKEN}
+    namespace: loan-backend
+    deployment: fraud-api
+    repo: shjrccr.ccs.tencentyun.com/loan-backend/fraud-api
+    kubernetes_server: https://cls-0bvr2i74.ccs.tencent-cloud.com
+    container: fraud-api
+    tag: ${DRONE_TAG##v}
+    when:
+      event: tag
+      branch: refs/tags/prod-v*
+    secrets: [ KUBERNETES_TOKEN ] #
+
+  deploy-test:
+    image: ccr.ccs.tencentyun.com/ops-public/plugin-drone-kubernetes:latest
+    kubernetes_token: eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJsb2FuLWJhY2tlbmQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoiZHJvbmUtZGVwbG95LXRva2VuLTR3eGdrIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImRyb25lLWRlcGxveSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjYwMjM2Y2QyLThmY2ItMTFlOC1iZjU3LTUyNTQwMDFlY2I5NyIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpsb2FuLWJhY2tlbmQ6ZHJvbmUtZGVwbG95In0.miN289b9YbQtT6a7nVl8cRa6rPPNxELPnCHPsFKI3DKLRUDCJhzy_DTGGdX-yGtEWVSE6sIQs5Jy-DvT973kpKHksHq5kI6sRgSKZS8CdKqJcNApXClK-oZQ6GCJYUxJEW0FDZ4qe9K-2T4pxbDfymc7FECbnmyiAd_f0yEQ1HgSEaoBiR95pHrGvHW-EeDtdjR3fMkc9kXuFbjqR8xWoHuFRWSKh5wREwiPO037tojAcDUk80uhp6_i6oEb4Wc7hbuDXgSXT17lIDNYTpQNuDgXORXCrmK8OEKRaozkHqXLeEsCS097iJ0oIb9pGoitkAZ3SHH8QJPsdLmD4aLZSQ
+    namespace: loan-backend
+    deployment: fraud-api
+    repo: ccr.ccs.tencentyun.com/loan-backend/fraud-api
+    kubernetes_server: https://cls-2mrjd1sr.ccs.tencent-cloud.com
+    container: fraud-api
+    tag: ${DRONE_TAG##v}
+    when:
+      branch: refs/tags/test-v*
+      event: tag
+
+  notify-finish-test:
+    image: ccr.ccs.tencentyun.com/ops-public/drone-email:latest
+    host: smtp.exmail.qq.com
+    username: ops@xwfintech.com
+    from: ops@xwfintech.com
+    skip_verify: true
+    recipients_only: true # 不发送给构建者
+    recipients: [ snakechen@xwfintech.com, bryanhou@xwfintech.com ]
+    subject: "[{{build.status}}]金科CI/CD构建结果通知-{{repo.fullName}}/[{{repo.branch}}]"
+    body: https://public-soft-1256721846.cos.ap-chengdu.myqcloud.com/email-body.html
+    when:
+      status: [ changed, failure, success ]
+      branch: [ refs/tags/test-v* ]
+    secrets: [ EMAIL_PASSWORD ]
+
+
+  notify-finish-prod:
+    image: ccr.ccs.tencentyun.com/ops-public/drone-email:latest
+    host: smtp.exmail.qq.com
+    username: ops@xwfintech.com
+    from: ops@xwfintech.com
+    skip_verify: true
+    recipients_only: true # 不发送给构建者
+    recipients: [ snakechen@xwfintech.com ]
+    subject: "[{{build.status}}]生产环境金科CI/CD构建结果通知-{{repo.fullName}}/[{{repo.branch}}]"
+    body: https://public-soft-1256721846.cos.ap-chengdu.myqcloud.com/email-body.html
+    when:
+      status: [ changed, failure, success ]
+      event: tag
+      branch: [ refs/tags/prod-v* ]
+    secrets: [ EMAIL_PASSWORD ]
